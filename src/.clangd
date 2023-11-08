@@ -1,0 +1,9 @@
+CompileFlags:
+  Add:
+    - -I./external
+    - -I./external/raylib/src
+    - -include raylib.h
+    - -DPLATFORM_DESKTOP
+    - -DRLIGHTS_IMPLEMENTATION
+    - -DPHYSICS_IMPLEMENTATION
+    - -Wno-macro-redefined

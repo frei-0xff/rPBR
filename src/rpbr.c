@@ -45,6 +45,25 @@
 //----------------------------------------------------------------------------------
 #include "external/raylib/src/raylib.h"         // Required for raylib framework
 #include "pbrcore.h"                            // Required for lighting, environment and drawing functions
+#include <stdio.h>
+
+static const char *FormatText(const char *text, ...)
+{
+    #define MAX_FORMATTEXT_LENGTH   64
+
+    static char buffer[MAX_FORMATTEXT_LENGTH];
+
+    va_list args;
+    va_start(args, text);
+    vsprintf(buffer, text, args);
+    va_end(args);
+
+    return buffer;
+}
+static int GetHexValue(Color color)
+{
+    return (((int)color.r << 24) | ((int)color.g << 16) | ((int)color.b << 8) | (int)color.a);
+}
 
 #define RAYGUI_IMPLEMENTATION
 #include "external/raygui.h"                    // Required for user interface functions
@@ -299,7 +318,7 @@ int main()
     camera.target = (Vector3){ 0.0f, 0.5f, 0.0f };
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
     camera.fovy = CAMERA_FOV;
-    SetCameraMode(camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
+    // SetCameraMode(camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
 
     // Define environment attributes
     environment = LoadEnvironment(PATH_TEXTURES_HDR, CUBEMAP_SIZE, IRRADIANCE_SIZE, PREFILTERED_SIZE, BRDF_SIZE);
@@ -309,45 +328,43 @@ int main()
     matPBR = SetupMaterialPBR(environment, (Color){ 255, 255, 255, 255 }, 255, 255);
 #if defined(PATH_TEXTURES_ALBEDO)
     SetMaterialTexturePBR(&matPBR, PBR_ALBEDO, LoadTexture(PATH_TEXTURES_ALBEDO));
-    SetTextureFilter(matPBR.albedo.bitmap, FILTER_BILINEAR);
+    SetTextureFilter(matPBR.albedo.bitmap, TEXTURE_FILTER_BILINEAR);
     textures[PBR_ALBEDO] = matPBR.albedo.bitmap;
 #endif
 #if defined(PATH_TEXTURES_NORMALS)
     SetMaterialTexturePBR(&matPBR, PBR_NORMALS, LoadTexture(PATH_TEXTURES_NORMALS));
-    SetTextureFilter(matPBR.normals.bitmap, FILTER_BILINEAR);
+    SetTextureFilter(matPBR.normals.bitmap, TEXTURE_FILTER_BILINEAR);
     textures[PBR_NORMALS] = matPBR.normals.bitmap;
 #endif
 #if defined(PATH_TEXTURES_METALNESS)
     SetMaterialTexturePBR(&matPBR, PBR_METALNESS, LoadTexture(PATH_TEXTURES_METALNESS));
-    SetTextureFilter(matPBR.metalness.bitmap, FILTER_BILINEAR);
+    SetTextureFilter(matPBR.metalness.bitmap, TEXTURE_FILTER_BILINEAR);
     textures[PBR_METALNESS] = matPBR.metalness.bitmap;
 #endif
 #if defined(PATH_TEXTURES_ROUGHNESS)
     SetMaterialTexturePBR(&matPBR, PBR_ROUGHNESS, LoadTexture(PATH_TEXTURES_ROUGHNESS));
-    SetTextureFilter(matPBR.roughness.bitmap, FILTER_BILINEAR);
+    SetTextureFilter(matPBR.roughness.bitmap, TEXTURE_FILTER_BILINEAR);
     textures[PBR_ROUGHNESS] = matPBR.roughness.bitmap;
 #endif
 #if defined(PATH_TEXTURES_AO)
     SetMaterialTexturePBR(&matPBR, PBR_AO, LoadTexture(PATH_TEXTURES_AO));
-    SetTextureFilter(matPBR.ao.bitmap, FILTER_BILINEAR);
+    SetTextureFilter(matPBR.ao.bitmap, TEXTURE_FILTER_BILINEAR);
     textures[PBR_AO] = matPBR.ao.bitmap;
 #endif
 #if defined(PATH_TEXTURES_EMISSION)
     SetMaterialTexturePBR(&matPBR, PBR_EMISSION, LoadTexture(PATH_TEXTURES_EMISSION));
-    SetTextureFilter(matPBR.emission.bitmap, FILTER_BILINEAR);
+    SetTextureFilter(matPBR.emission.bitmap, TEXTURE_FILTER_BILINEAR);
     textures[PBR_EMISSION] = matPBR.emission.bitmap;
 #endif
 #if defined(PATH_TEXTURES_HEIGHT)
     SetMaterialTexturePBR(&matPBR, PBR_HEIGHT, LoadTexture(PATH_TEXTURES_HEIGHT));
-    SetTextureFilter(matPBR.height.bitmap, FILTER_BILINEAR);
+    SetTextureFilter(matPBR.height.bitmap, TEXTURE_FILTER_BILINEAR);
     textures[PBR_HEIGHT] = matPBR.height.bitmap;
 #endif
     Shader fxShader = LoadShader(PATH_SHADERS_POSTFX_VS, PATH_SHADERS_POSTFX_FS);
 
     // Set up materials and lighting
-    Material material = { 0 };
-    material.shader = matPBR.env.pbrShader;
-    model.material = material;
+    model.materials[0].shader = matPBR.env.pbrShader;
 
     // Get shaders required locations
     int shaderModeLoc = GetShaderLocation(environment.pbrShader, "renderMode");
@@ -393,7 +410,7 @@ int main()
             camera.target = (Vector3){ 0.0f, 0.5f, 0.0f };
             camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
             camera.fovy = CAMERA_FOV;
-            SetCameraMode(camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
+            // SetCameraMode(camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
             lastCameraType = cameraType;
         }
 
@@ -407,7 +424,7 @@ int main()
             camera.fovy = CAMERA_FOV;
             cameraType = CAMERA_TYPE_FREE;
             lastCameraType = cameraType;
-            SetCameraMode(camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
+            // SetCameraMode(camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
 
             // Reset current light angle and lights positions
             lightAngle = 0.0f;
@@ -428,14 +445,13 @@ int main()
         // Check if a file is dropped
         if (IsFileDropped())
         {
-            int fileCount = 0;
-            char **droppedFiles = GetDroppedFiles(&fileCount);
+            FilePathList droppedFiles = LoadDroppedFiles();
 
             // Check file extensions for drag-and-drop
-            if (IsFileExtension(droppedFiles[0], ".hdr"))
+            if (IsFileExtension(droppedFiles.paths[0], ".hdr"))
             {
                 UnloadEnvironment(environment);
-                environment = LoadEnvironment(droppedFiles[0], CUBEMAP_SIZE, IRRADIANCE_SIZE, PREFILTERED_SIZE, BRDF_SIZE);
+                environment = LoadEnvironment(droppedFiles.paths[0], CUBEMAP_SIZE, IRRADIANCE_SIZE, PREFILTERED_SIZE, BRDF_SIZE);
                 resolution[0] = (float)GetScreenWidth()*renderScales[renderScale];
                 resolution[1] = (float)GetScreenHeight()*renderScales[renderScale];
                 SetShaderValue(environment.skyShader, environment.skyResolutionLoc, resolution, 2);
@@ -451,15 +467,13 @@ int main()
                 if (textures[PBR_HEIGHT].id != 0) SetMaterialTexturePBR(&matPBR, PBR_HEIGHT, textures[PBR_HEIGHT]);
 
                 // Set up materials and lighting
-                material = (Material){ 0 };
-                material.shader = matPBR.env.pbrShader;
-                model.material = material;
+                model.materials[0].shader = matPBR.env.pbrShader;
             }
-            else if (IsFileExtension(droppedFiles[0], ".obj"))
+            else if (IsFileExtension(droppedFiles.paths[0], ".obj"))
             {
                 UnloadModel(model);
-                model = LoadModel(droppedFiles[0]);
-                model.material = material;
+                model = LoadModel(droppedFiles.paths[0]);
+                model.materials[0].shader = matPBR.env.pbrShader;
             }
             else
             {
@@ -467,7 +481,7 @@ int main()
                 bool supportedImage = false;
                 for (int i = 0; i < MAX_SUPPORTED_EXTENSIONS; i++)
                 {
-                    if (IsFileExtension(droppedFiles[0], imageExtensions[i]))
+                    if (IsFileExtension(droppedFiles.paths[0], imageExtensions[i]))
                     {
                         supportedImage = true;
                         break;
@@ -487,7 +501,7 @@ int main()
                         // Check if file is droppen in texture rectangle
                         if (CheckCollisionPointRec(GetMousePosition(), rect))
                         {
-                            Texture2D newTex = LoadTexture(droppedFiles[0]);
+                            Texture2D newTex = LoadTexture(droppedFiles.paths[0]);
                             if (textures[i].id != 0) UnsetMaterialTexturePBR(&matPBR, i);
                             SetMaterialTexturePBR(&matPBR, i, newTex);
                             textures[i] = newTex;
@@ -495,9 +509,9 @@ int main()
                         }
                     }
                 }
+                UnloadDroppedFiles(droppedFiles);
             }
-
-            ClearDroppedFiles();
+            // ClearDroppedFiles();
         }
 
         // Check for display UI switch states
@@ -591,7 +605,7 @@ int main()
         if (GetMouseWheelMove() != 0) canMoveCamera = !overUI;
 
         // Check for camera movement inputs
-        if (canMoveCamera) UpdateCamera(&camera);
+        if (canMoveCamera) UpdateCamera(&camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
 
         // Fix camera move state if camera mode is orbital and mouse middle button is not down
         if (!canMoveCamera && ((!IsMouseButtonDown(MOUSE_MIDDLE_BUTTON) && (cameraType == CAMERA_ORBITAL)))) canMoveCamera = true;
@@ -606,7 +620,9 @@ int main()
             for (int i = 0; i < totalLights; i++)
             {
                 Ray ray = GetMouseRay(GetMousePosition(), camera);
-                if (CheckCollisionRaySphere(ray, lights[i].position, LIGHT_RADIUS)) selectedLight = i;
+                // if (CheckCollisionRaySphere(ray, lights[i].position, LIGHT_RADIUS)) selectedLight = i;
+                RayCollision col = GetRayCollisionSphere(ray, lights[i].position, LIGHT_RADIUS);
+                if (col.hit) selectedLight = i;
             }
 
             bool currentWindow = false;
@@ -632,13 +648,13 @@ int main()
 
         // Send current mode to PBR shader and enabled screen effects states to post-processing shader
         int shaderMode[1] = { renderMode };
-        SetShaderValuei(environment.pbrShader, shaderModeLoc, shaderMode, 1);
+        SetShaderValue(environment.pbrShader, shaderModeLoc, shaderMode, 1);
         shaderMode[0] = enabledFxaa;
-        SetShaderValuei(fxShader, enabledFxaaLoc, shaderMode, 1);
+        SetShaderValue(fxShader, enabledFxaaLoc, shaderMode, 1);
         shaderMode[0] = enabledBloom;
-        SetShaderValuei(fxShader, enabledBloomLoc, shaderMode, 1);
+        SetShaderValue(fxShader, enabledBloomLoc, shaderMode, 1);
         shaderMode[0] = enabledVignette;
-        SetShaderValuei(fxShader, enabledVignetteLoc, shaderMode, 1);
+        SetShaderValue(fxShader, enabledVignetteLoc, shaderMode, 1);
         //--------------------------------------------------------------------------
 
         // Draw
@@ -650,7 +666,7 @@ int main()
             // Render to texture for antialiasing post-processing
             BeginTextureMode(fxTarget);
 
-                Begin3dMode(camera);
+                BeginMode3D(camera);
 
                     // Draw ground grid
                     if (drawGrid) DrawGrid(10, 1.0f);
@@ -663,13 +679,14 @@ int main()
                     if (drawLights) for (unsigned int i = 0; (i < totalLights); i++)
                     {
                         Ray ray = GetMouseRay(GetMousePosition(), camera);
-                        DrawLight(lights[i], CheckCollisionRaySphere(ray, lights[i].position, LIGHT_RADIUS));
+                        RayCollision col = GetRayCollisionSphere(ray, lights[i].position, LIGHT_RADIUS);
+                        DrawLight(lights[i], col.hit);
                     }
 
                     // Render skybox (render as last to prevent overdraw)
                     if (drawSkybox) DrawSkybox(environment, camera);
 
-                End3dMode();
+                EndMode3D();
 
             EndTextureMode();
 
@@ -747,7 +764,7 @@ int main()
     // De-Initialization
     //------------------------------------------------------------------------------
     // Clear internal buffers
-    ClearDroppedFiles();
+    // ClearDroppedFiles();
 
     // Unload loaded model mesh and binded textures
     UnloadModel(model);
@@ -955,7 +972,7 @@ void DrawInterface(Vector2 size, int scrolling)
     padding = UI_MENU_WIDTH + UI_MENU_PADDING + UI_BUTTON_WIDTH + UI_MENU_PADDING;
     if (GuiButton((Rectangle){ padding, GetScreenHeight() - UI_MENU_PADDING - UI_BUTTON_HEIGHT, UI_BUTTON_WIDTH, UI_BUTTON_HEIGHT }, UI_TEXT_BUTTON_SS))
     {
-        TakeScreenshot(FormatText("rpbr_screenshot_%i.png", screenShotCount));
+        TakeScreenshot(TextFormat("rpbr_screenshot_%i.png", screenShotCount));
         screenShotCount++;
     }
 
