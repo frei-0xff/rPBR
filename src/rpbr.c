@@ -608,7 +608,7 @@ int main()
         if (canMoveCamera) UpdateCamera(&camera, (((cameraType == CAMERA_TYPE_FREE) ? CAMERA_FREE : CAMERA_ORBITAL)));
 
         // Fix camera move state if camera mode is orbital and mouse middle button is not down
-        if (!canMoveCamera && ((!IsMouseButtonDown(MOUSE_MIDDLE_BUTTON) && (cameraType == CAMERA_ORBITAL)))) canMoveCamera = true;
+        if (!canMoveCamera && ((!IsMouseButtonDown(MOUSE_MIDDLE_BUTTON) && (cameraType == CAMERA_TYPE_ORBITAL)))) canMoveCamera = true;
 
         // Check for light select input
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
