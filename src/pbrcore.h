@@ -226,13 +226,13 @@ MaterialPBR SetupMaterialPBR(Environment env, Color albedo, int metalness, int r
     mat.height.colorLoc = GetShaderLocation(mat.env.pbrShader, "height.color");
 
     // Set up PBR shader material texture units
-    SetShaderValue(mat.env.pbrShader, mat.albedo.bitmapLoc, (int[1]){ 3 }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.normals.bitmapLoc, (int[1]){ 4 }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.metalness.bitmapLoc, (int[1]){ 5 }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.roughness.bitmapLoc, (int[1]){ 6 }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.ao.bitmapLoc, (int[1]){ 7 }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.emission.bitmapLoc, (int[1]){ 8 }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.height.bitmapLoc, (int[1]){ 9 }, 1);
+    SetShaderValue(mat.env.pbrShader, mat.albedo.bitmapLoc, (int[1]){ 3 }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.normals.bitmapLoc, (int[1]){ 4 }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.metalness.bitmapLoc, (int[1]){ 5 }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.roughness.bitmapLoc, (int[1]){ 6 }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.ao.bitmapLoc, (int[1]){ 7 }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.emission.bitmapLoc, (int[1]){ 8 }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.height.bitmapLoc, (int[1]){ 9 }, SHADER_UNIFORM_INT);
 
     return mat;
 }
@@ -424,21 +424,21 @@ Environment LoadEnvironment(const char *filename, int cubemapSize, int irradianc
     int prefilterRoughnessLoc = GetShaderLocation(prefilterShader, "roughness");
 
     // Set up environment shader texture units
-    SetShaderValue(env.pbrShader, GetShaderLocation(env.pbrShader, "irradianceMap"), (int[1]){ 0 }, 1);
-    SetShaderValue(env.pbrShader, GetShaderLocation(env.pbrShader, "prefilterMap"), (int[1]){ 1 }, 1);
-    SetShaderValue(env.pbrShader, GetShaderLocation(env.pbrShader, "brdfLUT"), (int[1]){ 2 }, 1);
+    SetShaderValue(env.pbrShader, GetShaderLocation(env.pbrShader, "irradianceMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
+    SetShaderValue(env.pbrShader, GetShaderLocation(env.pbrShader, "prefilterMap"), (int[1]){ 1 }, SHADER_UNIFORM_INT);
+    SetShaderValue(env.pbrShader, GetShaderLocation(env.pbrShader, "brdfLUT"), (int[1]){ 2 }, SHADER_UNIFORM_INT);
 
     // Set up cubemap shader constant values
-    SetShaderValue(cubeShader, GetShaderLocation(cubeShader, "equirectangularMap"), (int[1]){ 0 }, 1);
+    SetShaderValue(cubeShader, GetShaderLocation(cubeShader, "equirectangularMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
 
     // Set up irradiance shader constant values
-    SetShaderValue(irradianceShader, GetShaderLocation(irradianceShader, "environmentMap"), (int[1]){ 0 }, 1);
+    SetShaderValue(irradianceShader, GetShaderLocation(irradianceShader, "environmentMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
 
     // Set up prefilter shader constant values
-    SetShaderValue(prefilterShader, GetShaderLocation(prefilterShader, "environmentMap"), (int[1]){ 0 }, 1);
+    SetShaderValue(prefilterShader, GetShaderLocation(prefilterShader, "environmentMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
 
     // Set up skybox shader constant values
-    SetShaderValue(env.skyShader, GetShaderLocation(env.skyShader, "environmentMap"), (int[1]){ 0 }, 1);
+    SetShaderValue(env.skyShader, GetShaderLocation(env.skyShader, "environmentMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
 
     // Set up depth face culling and cube map seamless
     glDepthFunc(GL_LEQUAL);
@@ -636,20 +636,20 @@ int GetLightsCount(void)
 void UpdateLightValues(Environment env, Light light)
 {
     // Send to shader light enabled state and type
-    SetShaderValue(env.pbrShader, light.enabledLoc, (int[1]){ light.enabled }, 1);
-    SetShaderValue(env.pbrShader, light.typeLoc, (int[1]){ light.type }, 1);
+    SetShaderValue(env.pbrShader, light.enabledLoc, (int[1]){ light.enabled }, SHADER_UNIFORM_INT);
+    SetShaderValue(env.pbrShader, light.typeLoc, (int[1]){ light.type }, SHADER_UNIFORM_INT);
 
     // Send to shader light position values
     float position[3] = { light.position.x, light.position.y, light.position.z };
-    SetShaderValue(env.pbrShader, light.posLoc, position, 3);
+    SetShaderValue(env.pbrShader, light.posLoc, position, SHADER_UNIFORM_VEC3);
 
     // Send to shader light target position values
     float target[3] = { light.target.x, light.target.y, light.target.z };
-    SetShaderValue(env.pbrShader, light.targetLoc, target, 3);
+    SetShaderValue(env.pbrShader, light.targetLoc, target, SHADER_UNIFORM_VEC3);
 
     // Send to shader light color values
     float diff[4] = { (float)light.color.r/(float)255, (float)light.color.g/(float)255, (float)light.color.b/(float)255, (float)light.color.a/(float)255 };
-    SetShaderValue(env.pbrShader, light.colorLoc, diff, 4);
+    SetShaderValue(env.pbrShader, light.colorLoc, diff, SHADER_UNIFORM_VEC4);
 }
 
 // Send to environment PBR shader camera view and resolution values
@@ -657,11 +657,11 @@ void UpdateEnvironmentValues(Environment env, Camera camera, Vector2 res)
 {
     // Send to shader camera view position
     float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
-    SetShaderValue(env.pbrShader, env.pbrViewLoc, cameraPos, 3);
+    SetShaderValue(env.pbrShader, env.pbrViewLoc, cameraPos, SHADER_UNIFORM_VEC3);
 
     // Send to shader screen resolution
     float resolution[2] = { res.x, res.y };
-    SetShaderValue(env.skyShader, env.skyResolutionLoc, resolution, 2);
+    SetShaderValue(env.skyShader, env.skyResolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 }
 
 // Draw a model using physically based rendering
@@ -672,28 +672,28 @@ void DrawModelPBR(Model model, MaterialPBR mat, Vector3 position, Vector3 rotati
 
     // Set up material uniforms and other constant values
     float shaderAlbedo[3] = { (float)mat.albedo.color.r/(float)255, (float)mat.albedo.color.g/(float)255, (float)mat.albedo.color.b/(float)255 };
-    SetShaderValue(mat.env.pbrShader, mat.albedo.colorLoc, shaderAlbedo, 3);
+    SetShaderValue(mat.env.pbrShader, mat.albedo.colorLoc, shaderAlbedo, SHADER_UNIFORM_VEC3);
     float shaderNormals[3] = { (float)mat.normals.color.r/(float)255, (float)mat.normals.color.g/(float)255, (float)mat.normals.color.b/(float)255 };
-    SetShaderValue(mat.env.pbrShader, mat.normals.colorLoc, shaderNormals, 3);
+    SetShaderValue(mat.env.pbrShader, mat.normals.colorLoc, shaderNormals, SHADER_UNIFORM_VEC3);
     float shaderMetalness[3] = { (float)mat.metalness.color.r/(float)255, (float)mat.metalness.color.g/(float)255, (float)mat.metalness.color.b/(float)255 };
-    SetShaderValue(mat.env.pbrShader, mat.metalness.colorLoc, shaderMetalness, 3);
+    SetShaderValue(mat.env.pbrShader, mat.metalness.colorLoc, shaderMetalness, SHADER_UNIFORM_VEC3);
     float shaderRoughness[3] = { 1.0f - (float)mat.roughness.color.r/(float)255, 1.0f - (float)mat.roughness.color.g/(float)255, 1.0f - (float)mat.roughness.color.b/(float)255 };
-    SetShaderValue(mat.env.pbrShader, mat.roughness.colorLoc, shaderRoughness, 3);
+    SetShaderValue(mat.env.pbrShader, mat.roughness.colorLoc, shaderRoughness, SHADER_UNIFORM_VEC3);
     float shaderAo[3] = { (float)mat.ao.color.r/(float)255, (float)mat.ao.color.g/(float)255, (float)mat.ao.color.b/(float)255 };
-    SetShaderValue(mat.env.pbrShader, mat.ao.colorLoc, shaderAo, 3);
+    SetShaderValue(mat.env.pbrShader, mat.ao.colorLoc, shaderAo, SHADER_UNIFORM_VEC3);
     float shaderEmission[3] = { (float)mat.emission.color.r/(float)255, (float)mat.emission.color.g/(float)255, (float)mat.emission.color.b/(float)255 };
-    SetShaderValue(mat.env.pbrShader, mat.emission.colorLoc, shaderEmission, 3);
+    SetShaderValue(mat.env.pbrShader, mat.emission.colorLoc, shaderEmission, SHADER_UNIFORM_VEC3);
     float shaderHeight[3] = { (float)mat.height.color.r/(float)255, (float)mat.height.color.g/(float)255, (float)mat.height.color.b/(float)255 };
-    SetShaderValue(mat.env.pbrShader, mat.height.colorLoc, shaderHeight, 3);
+    SetShaderValue(mat.env.pbrShader, mat.height.colorLoc, shaderHeight, SHADER_UNIFORM_VEC3);
 
     // Send sampler use state to PBR shader
-    SetShaderValue(mat.env.pbrShader, mat.albedo.useBitmapLoc, (int[1]){ mat.albedo.useBitmap }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.normals.useBitmapLoc, (int[1]){ mat.normals.useBitmap }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.metalness.useBitmapLoc, (int[1]){ mat.metalness.useBitmap }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.roughness.useBitmapLoc, (int[1]){ mat.roughness.useBitmap }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.ao.useBitmapLoc, (int[1]){ mat.ao.useBitmap }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.emission.useBitmapLoc, (int[1]){ mat.emission.useBitmap }, 1);
-    SetShaderValue(mat.env.pbrShader, mat.height.useBitmapLoc, (int[1]){ mat.height.useBitmap }, 1);
+    SetShaderValue(mat.env.pbrShader, mat.albedo.useBitmapLoc, (int[1]){ mat.albedo.useBitmap }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.normals.useBitmapLoc, (int[1]){ mat.normals.useBitmap }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.metalness.useBitmapLoc, (int[1]){ mat.metalness.useBitmap }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.roughness.useBitmapLoc, (int[1]){ mat.roughness.useBitmap }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.ao.useBitmapLoc, (int[1]){ mat.ao.useBitmap }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.emission.useBitmapLoc, (int[1]){ mat.emission.useBitmap }, SHADER_UNIFORM_INT);
+    SetShaderValue(mat.env.pbrShader, mat.height.useBitmapLoc, (int[1]){ mat.height.useBitmap }, SHADER_UNIFORM_INT);
 
     // Calculate and send to shader model matrix
     Matrix matScale = MatrixScale(scale.x, scale.y, scale.z);

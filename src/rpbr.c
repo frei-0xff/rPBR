@@ -387,8 +387,8 @@ int main()
 
     // Send resolution values to post-processing shader
     float resolution[2] = { (float)GetScreenWidth()*renderScales[renderScale], (float)GetScreenHeight()*renderScales[renderScale] };
-    SetShaderValue(fxShader, fxResolutionLoc, resolution, 2);
-    SetShaderValue(environment.skyShader, environment.skyResolutionLoc, resolution, 2);
+    SetShaderValue(fxShader, fxResolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+    SetShaderValue(environment.skyShader, environment.skyResolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
     // Set our game to run at 60 frames-per-second
     SetTargetFPS(60);
@@ -454,7 +454,7 @@ int main()
                 environment = LoadEnvironment(droppedFiles.paths[0], CUBEMAP_SIZE, IRRADIANCE_SIZE, PREFILTERED_SIZE, BRDF_SIZE);
                 resolution[0] = (float)GetScreenWidth()*renderScales[renderScale];
                 resolution[1] = (float)GetScreenHeight()*renderScales[renderScale];
-                SetShaderValue(environment.skyShader, environment.skyResolutionLoc, resolution, 2);
+                SetShaderValue(environment.skyShader, environment.skyResolutionLoc, resolution, SHADER_UNIFORM_VEC2);
                 matPBR = SetupMaterialPBR(environment, (Color){ 255, 255, 255, 255 }, 255, 255);
 
                 // Apply previously imported albedo texture to new PBR material
@@ -644,17 +644,17 @@ int main()
         // Send resolution values to post-processing shader
         resolution[0] = screenRes.x;
         resolution[1] = screenRes.y;
-        SetShaderValue(fxShader, fxResolutionLoc, resolution, 2);
+        SetShaderValue(fxShader, fxResolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
         // Send current mode to PBR shader and enabled screen effects states to post-processing shader
         int shaderMode[1] = { renderMode };
-        SetShaderValue(environment.pbrShader, shaderModeLoc, shaderMode, 1);
+        SetShaderValue(environment.pbrShader, shaderModeLoc, shaderMode, SHADER_UNIFORM_INT);
         shaderMode[0] = enabledFxaa;
-        SetShaderValue(fxShader, enabledFxaaLoc, shaderMode, 1);
+        SetShaderValue(fxShader, enabledFxaaLoc, shaderMode, SHADER_UNIFORM_INT);
         shaderMode[0] = enabledBloom;
-        SetShaderValue(fxShader, enabledBloomLoc, shaderMode, 1);
+        SetShaderValue(fxShader, enabledBloomLoc, shaderMode, SHADER_UNIFORM_INT);
         shaderMode[0] = enabledVignette;
-        SetShaderValue(fxShader, enabledVignetteLoc, shaderMode, 1);
+        SetShaderValue(fxShader, enabledVignetteLoc, shaderMode, SHADER_UNIFORM_INT);
         //--------------------------------------------------------------------------
 
         // Draw
